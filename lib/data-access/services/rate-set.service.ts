@@ -3,7 +3,7 @@ import {
   validateRateSet,
   type RateSetInput,
   type ValidationErrors,
-} from "@/app/_screens/rate-set/validation";
+} from "@/screens/rate-set/validation";
 
 export class RateSetValidationError extends Error {
   constructor(public details: ValidationErrors) {
