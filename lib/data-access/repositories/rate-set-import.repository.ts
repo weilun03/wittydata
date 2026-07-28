@@ -1,5 +1,5 @@
 import { sql, type Insertable, type Kysely, type Updateable } from "kysely";
-import type { Database } from "@/db/types";
+import type { Database } from "@/lib/data-access/types";
 
 type DbOrTrx = Kysely<Database>;
 

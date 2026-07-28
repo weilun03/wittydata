@@ -1,11 +1,11 @@
 import type { NextRequest } from "next/server";
-import { apiSuccess, apiError } from "@/lib/api-response";
+import { apiSuccess, apiError } from "@/lib/util-helpers/api-response";
 import {
   createInvoice,
   listInvoicesPaged,
   InvoiceValidationError,
   InvoiceConflictError,
-} from "@/services/invoice.service";
+} from "@/lib/data-access/services/invoice.service";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;

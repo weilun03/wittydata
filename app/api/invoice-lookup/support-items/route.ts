@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
-import { apiSuccess, apiError } from "@/lib/api-response";
-import { listSupportItemsForCategory } from "@/repositories/invoice-lookup.repository";
+import { apiSuccess, apiError } from "@/lib/util-helpers/api-response";
+import { listSupportItemsForCategory } from "@/lib/data-access/repositories/invoice-lookup.repository";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;

@@ -1,6 +1,6 @@
 import { sql, type Insertable, type Updateable } from "kysely";
-import { db } from "@/lib/db";
-import type { ProviderTable } from "@/db/types";
+import { db } from "@/lib/data-access/db";
+import type { ProviderTable } from "@/lib/data-access/types";
 
 const activeProviders = () => db.selectFrom("provider").where("deleted_at", "is", null);
 

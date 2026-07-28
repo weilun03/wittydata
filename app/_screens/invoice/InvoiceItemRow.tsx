@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Button, DatePicker, InputNumber, Select, Typography } from "antd";
 import dayjs, { type Dayjs } from "dayjs";
-import type { RateSetCategoryOption, SupportItemOption } from "@/modules/invoice/types";
+import type { RateSetCategoryOption, SupportItemOption } from "@/app/_screens/invoice/types";
 
 export interface InvoiceItemValue {
   key: string;

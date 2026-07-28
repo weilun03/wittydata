@@ -1,12 +1,12 @@
 import type { NextRequest } from "next/server";
-import { apiSuccess, apiError } from "@/lib/api-response";
+import { apiSuccess, apiError } from "@/lib/util-helpers/api-response";
 import {
   getRateSet,
   updateRateSetById,
   RateSetValidationError,
   RateSetConflictError,
   RateSetNotFoundError,
-} from "@/services/rate-set.service";
+} from "@/lib/data-access/services/rate-set.service";
 
 function parseId(raw: string): number | null {
   const id = Number(raw);

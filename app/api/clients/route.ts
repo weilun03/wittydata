@@ -1,11 +1,11 @@
 import type { NextRequest } from "next/server";
-import { apiSuccess, apiError } from "@/lib/api-response";
+import { apiSuccess, apiError } from "@/lib/util-helpers/api-response";
 import {
   createClient,
   listClientsPaged,
   ClientValidationError,
   ClientConflictError,
-} from "@/services/client.service";
+} from "@/lib/data-access/services/client.service";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;

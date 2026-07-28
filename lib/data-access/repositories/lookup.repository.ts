@@ -1,4 +1,4 @@
-import { db } from "@/lib/db";
+import { db } from "@/lib/data-access/db";
 
 export async function listGenders() {
   return db

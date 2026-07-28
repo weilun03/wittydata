@@ -1,8 +1,8 @@
 import type { NextRequest } from "next/server";
-import { apiSuccess, apiError } from "@/lib/api-response";
-import { toUtcEndOfDay, toUtcStartOfDay } from "@/modules/invoice/dates";
-import { isValidDateInput } from "@/modules/invoice/validation";
-import { findRateSetsOverlapping, listCategoriesForRateSet } from "@/repositories/invoice-lookup.repository";
+import { apiSuccess, apiError } from "@/lib/util-helpers/api-response";
+import { toUtcEndOfDay, toUtcStartOfDay } from "@/app/_screens/invoice/dates";
+import { isValidDateInput } from "@/app/_screens/invoice/validation";
+import { findRateSetsOverlapping, listCategoriesForRateSet } from "@/lib/data-access/repositories/invoice-lookup.repository";
 
 // Read-only preview for the invoice item form: given a date range, resolve
 // which rate set applies (per spec 9.3) and list its categories, so the UI

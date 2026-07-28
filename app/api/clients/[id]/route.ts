@@ -1,12 +1,12 @@
 import type { NextRequest } from "next/server";
-import { apiSuccess, apiError } from "@/lib/api-response";
+import { apiSuccess, apiError } from "@/lib/util-helpers/api-response";
 import {
   getClient,
   updateClientById,
   ClientValidationError,
   ClientConflictError,
   ClientNotFoundError,
-} from "@/services/client.service";
+} from "@/lib/data-access/services/client.service";
 
 function parseId(raw: string): number | null {
   const id = Number(raw);

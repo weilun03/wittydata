@@ -1,5 +1,5 @@
-import * as clientRepo from "@/repositories/client.repository";
-import { validateClient, type ClientInput, type ValidationErrors } from "@/modules/client/validation";
+import * as clientRepo from "@/lib/data-access/repositories/client.repository";
+import { validateClient, type ClientInput, type ValidationErrors } from "@/app/_screens/client/validation";
 
 export class ClientValidationError extends Error {
   constructor(public details: ValidationErrors) {

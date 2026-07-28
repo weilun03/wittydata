@@ -1,6 +1,6 @@
 import { sql, type Insertable, type Updateable } from "kysely";
-import { db } from "@/lib/db";
-import type { ClientTable } from "@/db/types";
+import { db } from "@/lib/data-access/db";
+import type { ClientTable } from "@/lib/data-access/types";
 
 const activeClients = () => db.selectFrom("client").where("deleted_at", "is", null);
 

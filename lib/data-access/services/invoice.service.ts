@@ -1,9 +1,9 @@
 import BigNumber from "bignumber.js";
 import type { Kysely } from "kysely";
-import { db } from "@/lib/db";
-import type { Database } from "@/db/types";
-import * as invoiceRepo from "@/repositories/invoice.repository";
-import * as lookupRepo from "@/repositories/invoice-lookup.repository";
+import { db } from "@/lib/data-access/db";
+import type { Database } from "@/lib/data-access/types";
+import * as invoiceRepo from "@/lib/data-access/repositories/invoice.repository";
+import * as lookupRepo from "@/lib/data-access/repositories/invoice-lookup.repository";
 import {
   isPositiveIntegerInput,
   isValidDateInput,
@@ -13,8 +13,8 @@ import {
   type InvoiceInput,
   type InvoiceItemInput,
   type ValidationErrors,
-} from "@/modules/invoice/validation";
-import { toUtcEndOfDay, toUtcStartOfDay } from "@/modules/invoice/dates";
+} from "@/app/_screens/invoice/validation";
+import { toUtcEndOfDay, toUtcStartOfDay } from "@/app/_screens/invoice/dates";
 
 export class InvoiceValidationError extends Error {
   constructor(public details: ValidationErrors) {

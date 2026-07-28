@@ -1,9 +1,9 @@
-import * as providerRepo from "@/repositories/provider.repository";
+import * as providerRepo from "@/lib/data-access/repositories/provider.repository";
 import {
   validateProvider,
   type ProviderInput,
   type ValidationErrors,
-} from "@/modules/provider/validation";
+} from "@/app/_screens/provider/validation";
 
 export class ProviderValidationError extends Error {
   constructor(public details: ValidationErrors) {

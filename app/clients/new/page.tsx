@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { message } from "antd";
-import { ClientForm } from "@/modules/client/ClientForm";
-import type { Gender, PricingRegion } from "@/modules/client/types";
-import { BackButton } from "@/components/BackButton";
+import { ClientForm } from "@/app/_screens/client/ClientForm";
+import type { Gender, PricingRegion } from "@/app/_screens/client/types";
+import { BackButton } from "@/app/_components/BackButton";
 
 export default function NewClientPage() {
   const router = useRouter();

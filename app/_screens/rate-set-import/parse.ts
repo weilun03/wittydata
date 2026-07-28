@@ -5,13 +5,13 @@ import {
   EXPECTED_HEADER_A1,
   PRICING_REGION_COLUMNS_END,
   PRICING_REGION_COLUMNS_START,
-} from "@/modules/rate-set-import/constants";
+} from "@/app/_screens/rate-set-import/constants";
 import type {
   ParsedCategory,
   ParsedPrice,
   ParsedSupportItem,
   ParsedWorkbook,
-} from "@/modules/rate-set-import/types";
+} from "@/app/_screens/rate-set-import/types";
 
 type Row = unknown[];
 

@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { message } from "antd";
-import { RateSetForm } from "@/modules/rate-set/RateSetForm";
-import { BackButton } from "@/components/BackButton";
+import { RateSetForm } from "@/app/_screens/rate-set/RateSetForm";
+import { BackButton } from "@/app/_components/BackButton";
 
 export default function NewRateSetPage() {
   const router = useRouter();

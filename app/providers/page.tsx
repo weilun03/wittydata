@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Table, Button, Typography, message } from "antd";
-import type { ProviderRecord } from "@/modules/provider/types";
+import type { ProviderRecord } from "@/app/_screens/provider/types";
 
 export default function ProvidersPage() {
   const [rows, setRows] = useState<ProviderRecord[]>([]);

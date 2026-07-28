@@ -1,6 +1,6 @@
 import { Kysely, PostgresDialect } from "kysely";
 import { Pool, types } from "pg";
-import type { Database } from "@/db/types";
+import type { Database } from "@/lib/data-access/types";
 
 // Postgres `date` OID (1082): return the raw "YYYY-MM-DD" string instead of
 // node-postgres's default JS Date conversion, which shifts by timezone.

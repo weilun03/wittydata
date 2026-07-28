@@ -1,9 +1,9 @@
-import * as rateSetRepo from "@/repositories/rate-set.repository";
+import * as rateSetRepo from "@/lib/data-access/repositories/rate-set.repository";
 import {
   validateRateSet,
   type RateSetInput,
   type ValidationErrors,
-} from "@/modules/rate-set/validation";
+} from "@/app/_screens/rate-set/validation";
 
 export class RateSetValidationError extends Error {
   constructor(public details: ValidationErrors) {

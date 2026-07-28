@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { message } from "antd";
-import { InvoiceForm } from "@/modules/invoice/InvoiceForm";
-import { BackButton } from "@/components/BackButton";
+import { InvoiceForm } from "@/app/_screens/invoice/InvoiceForm";
+import { BackButton } from "@/app/_components/BackButton";
 
 export default function NewInvoicePage() {
   const router = useRouter();

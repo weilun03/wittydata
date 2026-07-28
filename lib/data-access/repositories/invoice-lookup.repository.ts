@@ -1,6 +1,6 @@
 import { sql, type Kysely } from "kysely";
-import { db } from "@/lib/db";
-import type { Database } from "@/db/types";
+import { db } from "@/lib/data-access/db";
+import type { Database } from "@/lib/data-access/types";
 
 type DbOrTrx = Kysely<Database>;
 

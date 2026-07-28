@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Button, Descriptions, Spin, message } from "antd";
-import { ProviderForm } from "@/modules/provider/ProviderForm";
-import type { ProviderRecord } from "@/modules/provider/types";
-import { BackButton } from "@/components/BackButton";
+import { ProviderForm } from "@/app/_screens/provider/ProviderForm";
+import type { ProviderRecord } from "@/app/_screens/provider/types";
+import { BackButton } from "@/app/_components/BackButton";
 
 export default function ProviderDetailPage() {
   const params = useParams<{ id: string }>();

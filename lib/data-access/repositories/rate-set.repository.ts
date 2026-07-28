@@ -1,6 +1,6 @@
 import { sql, type Insertable, type Updateable } from "kysely";
-import { db } from "@/lib/db";
-import type { RateSetTable } from "@/db/types";
+import { db } from "@/lib/data-access/db";
+import type { RateSetTable } from "@/lib/data-access/types";
 
 const activeRateSets = () => db.selectFrom("rate_set").where("deleted_at", "is", null);
 
