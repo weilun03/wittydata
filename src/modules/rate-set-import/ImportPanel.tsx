@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Alert, Button, Descriptions, Upload, message, Typography } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import type { UploadFile } from "antd/es/upload/interface";
-import type { RateSetImportSummary } from "@/screens/rate-set-import/types";
+import type { RateSetImportSummary } from "@/modules/rate-set-import/types";
 
 interface ImportPanelProps {
   rateSetId: number;

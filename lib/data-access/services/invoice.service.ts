@@ -13,8 +13,8 @@ import {
   type InvoiceInput,
   type InvoiceItemInput,
   type ValidationErrors,
-} from "@/screens/invoice/validation";
-import { toUtcEndOfDay, toUtcStartOfDay } from "@/screens/invoice/dates";
+} from "@/modules/invoice/validation";
+import { toUtcEndOfDay, toUtcStartOfDay } from "@/modules/invoice/dates";
 
 export class InvoiceValidationError extends Error {
   constructor(public details: ValidationErrors) {

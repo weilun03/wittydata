@@ -1,9 +1,9 @@
 import { db } from "@/lib/data-access/db";
 import { getRateSetById } from "@/lib/data-access/repositories/rate-set.repository";
 import * as importRepo from "@/lib/data-access/repositories/rate-set-import.repository";
-import { parseWorkbook } from "@/screens/rate-set-import/parse";
-import { PRICING_REGION_FULL_LABELS } from "@/screens/rate-set-import/constants";
-import type { RateSetImportSummary } from "@/screens/rate-set-import/types";
+import { parseWorkbook } from "@/modules/rate-set-import/parse";
+import { PRICING_REGION_FULL_LABELS } from "@/modules/rate-set-import/constants";
+import type { RateSetImportSummary } from "@/modules/rate-set-import/types";
 
 export class RateSetImportNotFoundError extends Error {
   constructor() {

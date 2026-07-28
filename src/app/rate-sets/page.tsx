@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Table, Button, Typography, message } from "antd";
 import dayjs from "dayjs";
-import type { RateSetRecord } from "@/screens/rate-set/types";
+import type { RateSetRecord } from "@/modules/rate-set/types";
 
 export default function RateSetsPage() {
   const [rows, setRows] = useState<RateSetRecord[]>([]);

@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { message } from "antd";
-import { ClientForm } from "@/screens/client/ClientForm";
-import type { Gender, PricingRegion } from "@/screens/client/types";
+import { ClientForm } from "@/modules/client/ClientForm";
+import type { Gender, PricingRegion } from "@/modules/client/types";
 import { BackButton } from "@/components/BackButton";
 
 export default function NewClientPage() {

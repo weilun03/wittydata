@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { Form, Input, Select, DatePicker, Button, Alert, Space } from "antd";
 import type { Dayjs } from "dayjs";
-import type { Gender, PricingRegion } from "@/screens/client/types";
+import type { Gender, PricingRegion } from "@/modules/client/types";
 
 interface ClientFormInitialValues {
   first_name?: string;

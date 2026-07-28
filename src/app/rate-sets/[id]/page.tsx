@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Button, Descriptions, Spin, message } from "antd";
 import dayjs from "dayjs";
-import { RateSetForm } from "@/screens/rate-set/RateSetForm";
-import type { RateSetRecord } from "@/screens/rate-set/types";
-import { ImportPanel } from "@/screens/rate-set-import/ImportPanel";
+import { RateSetForm } from "@/modules/rate-set/RateSetForm";
+import type { RateSetRecord } from "@/modules/rate-set/types";
+import { ImportPanel } from "@/modules/rate-set-import/ImportPanel";
 import { BackButton } from "@/components/BackButton";
 
 export default function RateSetDetailPage() {

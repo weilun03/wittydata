@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { apiSuccess, apiError } from "@/lib/util-helpers/api-response";
-import { toUtcEndOfDay, toUtcStartOfDay } from "@/screens/invoice/dates";
-import { isValidDateInput } from "@/screens/invoice/validation";
+import { toUtcEndOfDay, toUtcStartOfDay } from "@/modules/invoice/dates";
+import { isValidDateInput } from "@/modules/invoice/validation";
 import { findRateSetsOverlapping, listCategoriesForRateSet } from "@/lib/data-access/repositories/invoice-lookup.repository";
 
 // Read-only preview for the invoice item form: given a date range, resolve

@@ -3,7 +3,7 @@ import {
   validateProvider,
   type ProviderInput,
   type ValidationErrors,
-} from "@/screens/provider/validation";
+} from "@/modules/provider/validation";
 
 export class ProviderValidationError extends Error {
   constructor(public details: ValidationErrors) {

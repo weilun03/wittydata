@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { message } from "antd";
-import { InvoiceForm } from "@/screens/invoice/InvoiceForm";
+import { InvoiceForm } from "@/modules/invoice/InvoiceForm";
 import { BackButton } from "@/components/BackButton";
 
 export default function NewInvoicePage() {

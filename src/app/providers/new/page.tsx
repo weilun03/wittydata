@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { message } from "antd";
-import { ProviderForm } from "@/screens/provider/ProviderForm";
+import { ProviderForm } from "@/modules/provider/ProviderForm";
 import { BackButton } from "@/components/BackButton";
 
 export default function NewProviderPage() {

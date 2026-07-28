@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Button, Descriptions, Spin, Table, Tag, message } from "antd";
 import dayjs from "dayjs";
-import { InvoiceForm } from "@/screens/invoice/InvoiceForm";
-import type { InvoiceItemValue } from "@/screens/invoice/InvoiceItemRow";
-import type { InvoiceRecord } from "@/screens/invoice/types";
+import { InvoiceForm } from "@/modules/invoice/InvoiceForm";
+import type { InvoiceItemValue } from "@/modules/invoice/InvoiceItemRow";
+import type { InvoiceRecord } from "@/modules/invoice/types";
 import { BackButton } from "@/components/BackButton";
 
 export default function InvoiceDetailPage() {

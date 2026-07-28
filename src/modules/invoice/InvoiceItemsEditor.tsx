@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "antd";
-import { InvoiceItemRow, type InvoiceItemValue } from "@/screens/invoice/InvoiceItemRow";
+import { InvoiceItemRow, type InvoiceItemValue } from "@/modules/invoice/InvoiceItemRow";
 
 interface InvoiceItemsEditorProps {
   value: InvoiceItemValue[];

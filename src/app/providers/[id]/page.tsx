@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Button, Descriptions, Spin, message } from "antd";
-import { ProviderForm } from "@/screens/provider/ProviderForm";
-import type { ProviderRecord } from "@/screens/provider/types";
+import { ProviderForm } from "@/modules/provider/ProviderForm";
+import type { ProviderRecord } from "@/modules/provider/types";
 import { BackButton } from "@/components/BackButton";
 
 export default function ProviderDetailPage() {

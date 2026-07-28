@@ -3,10 +3,10 @@
 import { useEffect, useState } from "react";
 import { Alert, Button, DatePicker, Form, Input, InputNumber, Select, Space, Typography } from "antd";
 import type { Dayjs } from "dayjs";
-import { InvoiceItemsEditor } from "@/screens/invoice/InvoiceItemsEditor";
-import type { InvoiceItemValue } from "@/screens/invoice/InvoiceItemRow";
-import type { ClientRecord } from "@/screens/client/types";
-import type { ProviderRecord } from "@/screens/provider/types";
+import { InvoiceItemsEditor } from "@/modules/invoice/InvoiceItemsEditor";
+import type { InvoiceItemValue } from "@/modules/invoice/InvoiceItemRow";
+import type { ClientRecord } from "@/modules/client/types";
+import type { ProviderRecord } from "@/modules/provider/types";
 
 interface InvoiceFormInitialValues {
   client_id?: number;

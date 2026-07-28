@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Button, Descriptions, Spin, message } from "antd";
 import dayjs from "dayjs";
-import { ClientForm } from "@/screens/client/ClientForm";
-import type { ClientRecord, Gender, PricingRegion } from "@/screens/client/types";
+import { ClientForm } from "@/modules/client/ClientForm";
+import type { ClientRecord, Gender, PricingRegion } from "@/modules/client/types";
 import { BackButton } from "@/components/BackButton";
 
 export default function ClientDetailPage() {

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Table, Button, Typography, message } from "antd";
-import type { ClientRecord } from "@/screens/client/types";
+import type { ClientRecord } from "@/modules/client/types";
 
 export default function ClientsPage() {
   const [rows, setRows] = useState<ClientRecord[]>([]);

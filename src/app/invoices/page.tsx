@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Table, Button, Typography, Tag, message } from "antd";
-import type { InvoiceListRow } from "@/screens/invoice/types";
+import type { InvoiceListRow } from "@/modules/invoice/types";
 
 export default function InvoicesPage() {
   const [rows, setRows] = useState<InvoiceListRow[]>([]);
