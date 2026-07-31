@@ -1,3 +1,15 @@
+-- Per reference/ndis_excel_import_logic.sql: "There are only 3 genders by
+-- default: Female, Male, Unidentified" — code derived from the label
+-- (uppercase, spaces to underscores). Unlike pricing_region, gender remains
+-- fully user-editable via the Genders admin screen; this just seeds the
+-- 3 defaults so Participant creation isn't blocked on a fresh install.
+insert into gender (code, label)
+values
+    ('FEMALE', 'Female'),
+    ('MALE', 'Male'),
+    ('UNIDENTIFIED', 'Unidentified')
+on conflict (code) do nothing;
+
 -- pricing_region is a fixed, externally-defined enum (not derived from
 -- business data, and not user-managed like gender is), so it's bootstrapped
 -- here rather than left to be populated only as a side effect of the first

@@ -47,23 +47,38 @@ cp .env.example .env.local
 
 The defaults in `.env.example` match `docker-compose.yml`, so no changes are required if you use Docker.
 
+**AI invoice extraction requires your own API key.** Every other feature (participants, providers,
+invoices, rate sets, RBAC, audit logs) works without any key. But `OPENAI_API_KEY`/`OPENROUTER_API_KEY`
+ship blank in `.env.example` — without one set, uploading a PDF still stores the file in MinIO
+successfully, but extraction fails with a clear `"No AI provider configured"` status in Upload
+History rather than crashing.
+
+Note: Free-tier API accounts may have usage limits or rate limits depending on the provider. For
+heavy testing or production usage, a paid API plan or higher quota is recommended.
+
 ### 3. Start Postgres and MinIO
+
+The project uses SQL initialization scripts (`db/init/`) to create the database schema and seed
+required data on a fresh PostgreSQL instance — this is what satisfies the assessment's "Database
+migration scripts" deliverable.
 
 ```bash
 docker compose up -d
 ```
 
-The Postgres container automatically runs everything in `db/init/` on first boot (via
-`docker-entrypoint-initdb.d`):
+On first initialization, the Postgres container automatically executes every SQL file in
+`db/init/` via `docker-entrypoint-initdb.d`:
 
 - `01_schema.sql` — full schema (tables, constraints, soft-delete columns)
 - `02_seed.sql` — RBAC roles/permissions and a default super admin user
 - `03_lookup_seed.sql` — static lookup data (genders, pricing regions, etc.)
 
-If you change these files after the volume has already been initialized, recreate the volume:
+If you modify any SQL files in `db/init/` after the database volume has already been initialized,
+those changes will not be applied automatically. Recreate the volume to re-run the initialization:
 
 ```bash
-docker compose down -v && docker compose up -d
+docker compose down -v
+docker compose up -d
 ```
 
 MinIO console is available at http://localhost:9001 (user/pass: `witty` / `wittysecret`).
@@ -76,7 +91,7 @@ npm run dev
 
 Open http://localhost:3000 — you'll be redirected to `/login`.
 
-**Seeded login:** `test@wittydata.com` / `Test1234` (Super Admin, matches the reference system's
+**Seeded login (fresh database only):** `test@wittydata.com` / `Test1234` (Super Admin, matches the reference system's
 credentials).
 
 ## Feature coverage
@@ -307,9 +322,10 @@ and amount recalculation lives in `services/`, never in the frontend.
   only the user↔role assignment itself is session-cached.)
 - **No sliding session renewal** — fixed 12-hour TTL; an active user gets logged out mid-work past
   that window. No login rate limiting/lockout after failed attempts, either.
-- **No automatic AI-provider fallback or retry/backoff** — `lib/ai.ts` picks OpenAI if configured,
-  else OpenRouter, else nothing; a transient failure (including the free-tier rate limit hit during
-  testing) just marks the file failed immediately, with no retry against the other provider.
+- **No automatic AI-provider fallback or retry/backoff** — transient provider failures (e.g. rate
+  limits, timeouts, or temporary outages) immediately fail the extraction request; this includes a
+  free-tier rate limit actually hit during testing. Automatic retry or failover to another
+  configured provider was intentionally omitted to keep the implementation simple.
 - **No OCR/vision fallback** for scanned PDFs — the clearest capability gap in AI extraction.
 - **No background job queue** for uploads — extraction currently blocks the HTTP request; the
   natural next step if this needs to handle real load or slower models.
