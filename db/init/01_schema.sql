@@ -327,6 +327,7 @@ create table rbac_role (
     label text not null unique,
     is_default boolean not null default false,
     created_at timestamptz not null default now(),
+    updated_at timestamptz not null default now(),
     deactivated_at timestamptz
 );
 
@@ -378,7 +379,7 @@ create table audit_log (
     actor_user_id int references app_user(id),
     actor_role_id int references rbac_role(id),
     action text not null,
-    permission_code text references rbac_permission(code),
+    permission_code text references rbac_permission(code) on delete set null,
     entity text not null,
     entity_id text,
     payload jsonb,

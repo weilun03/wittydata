@@ -188,6 +188,7 @@ export interface RbacRoleTable {
   label: string;
   is_default: Generated<boolean>;
   created_at: Generated<Timestamptz>;
+  updated_at: Generated<Timestamptz>;
   deactivated_at: Timestamptz | null;
 }
 
