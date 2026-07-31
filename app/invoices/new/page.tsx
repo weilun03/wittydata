@@ -2,12 +2,17 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { message } from "antd";
+import { message, Spin } from "antd";
 import { InvoiceForm } from "@/modules/invoice/InvoiceForm";
 import { BackButton } from "@/components/BackButton";
+import { NoPermission } from "@/components/NoPermission";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { PERMISSIONS } from "@/lib/permissions";
 
 export default function NewInvoicePage() {
   const router = useRouter();
+  const { loading: permissionsLoading, hasPermission } = useCurrentUser();
+  const canCreate = hasPermission(PERMISSIONS.INVOICES_CREATE);
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]> | undefined>();
@@ -36,6 +41,22 @@ export default function NewInvoicePage() {
       setSubmitting(false);
     }
   };
+
+  if (permissionsLoading) {
+    return (
+      <div className="p-8">
+        <Spin />
+      </div>
+    );
+  }
+
+  if (!canCreate) {
+    return (
+      <div className="p-8">
+        <NoPermission message="You do not have permission to add invoices." />
+      </div>
+    );
+  }
 
   return (
     <div className="p-8">

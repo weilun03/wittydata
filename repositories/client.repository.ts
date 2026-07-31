@@ -4,6 +4,18 @@ import type { ClientTable } from "@/db/types";
 
 const activeClients = () => db.selectFrom("client").where("deleted_at", "is", null);
 
+export async function findActiveClientsByNdisNumber(ndisNumber: string) {
+  return activeClients().selectAll().where("ndis_number", "=", ndisNumber).execute();
+}
+
+export async function searchActiveClientsByNameTokens(tokens: string[]) {
+  if (tokens.length === 0) return [];
+  return activeClients()
+    .selectAll()
+    .where(sql<boolean>`name_parts && ${tokens}::text[]`)
+    .execute();
+}
+
 export async function listClients({ limit, offset }: { limit: number; offset: number }) {
   const [rows, totalRow] = await Promise.all([
     activeClients().selectAll().orderBy("id", "desc").limit(limit).offset(offset).execute(),
@@ -35,6 +47,16 @@ export async function updateClient(id: number, values: Updateable<ClientTable>) 
   return db
     .updateTable("client")
     .set({ ...values, updated_at: sql`now()` })
+    .where("id", "=", id)
+    .where("deleted_at", "is", null)
+    .returningAll()
+    .executeTakeFirst();
+}
+
+export async function deleteClient(id: number) {
+  return db
+    .updateTable("client")
+    .set({ deleted_at: sql`now()` })
     .where("id", "=", id)
     .where("deleted_at", "is", null)
     .returningAll()

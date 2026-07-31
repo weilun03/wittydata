@@ -4,6 +4,7 @@ import * as importRepo from "@/repositories/rate-set-import.repository";
 import { parseWorkbook } from "@/modules/rate-set-import/parse";
 import { PRICING_REGION_FULL_LABELS } from "@/modules/rate-set-import/constants";
 import type { RateSetImportSummary } from "@/modules/rate-set-import/types";
+import { recordAuditLog, type ActorContext } from "@/lib/audit";
 
 export class RateSetImportNotFoundError extends Error {
   constructor() {
@@ -27,6 +28,7 @@ function isoOrEmpty(value: Date | string | null): string {
 export async function importRateSetExcel(
   rateSetId: number,
   buffer: Buffer,
+  actor: ActorContext,
 ): Promise<RateSetImportSummary> {
   const rateSet = await getRateSetById(rateSetId);
   if (!rateSet) {
@@ -40,7 +42,7 @@ export async function importRateSetExcel(
     );
   }
 
-  return db.transaction().execute(async (trx) => {
+  const summary = await db.transaction().execute(async (trx) => {
     // --- Global lookups: pricing regions, attribute types, support item types ---
     for (const region of parsed.pricingRegions) {
       await importRepo.upsertPricingRegion(
@@ -293,4 +295,24 @@ export async function importRateSetExcel(
       warnings: parsed.warnings,
     };
   });
+
+  // One audit entry for the whole import rather than one per touched row (an import can
+  // touch hundreds of category/support-item/price rows across four tables) — the summary
+  // counts already capture what changed.
+  await recordAuditLog({
+    actor: { userId: actor.userId, roleId: actor.roleId },
+    permissionCode: actor.permissionCode,
+    action: "update",
+    entity: "rate_set_import",
+    entityId: rateSetId,
+    after: {
+      categories: summary.categories,
+      supportItems: summary.supportItems,
+      prices: summary.prices,
+      sheetsProcessed: summary.sheetsProcessed,
+      sheetsSkipped: summary.sheetsSkipped,
+    },
+  });
+
+  return summary;
 }

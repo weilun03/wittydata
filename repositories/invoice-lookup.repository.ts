@@ -84,6 +84,22 @@ export async function getSupportItemById(id: number, trx: DbOrTrx = db) {
     .executeTakeFirst();
 }
 
+// Filtered to a single rate set (already matched), since item_number is only
+// unique per rate_set_id + category_id + item_number, not globally.
+export async function findSupportItemsByItemNumber(
+  rateSetId: number,
+  itemNumber: string,
+  trx: DbOrTrx = db,
+) {
+  return trx
+    .selectFrom("rate_set_support_item")
+    .selectAll()
+    .where("rate_set_id", "=", rateSetId)
+    .where("item_number", "=", itemNumber)
+    .where("deleted_at", "is", null)
+    .execute();
+}
+
 export async function getClientPricingRegion(clientId: number, trx: DbOrTrx = db) {
   const row = await trx
     .selectFrom("client")

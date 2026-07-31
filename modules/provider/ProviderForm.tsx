@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { Form, Input, Button, Alert, Space } from "antd";
+import { Form, Input, Button, Alert, Space, Card } from "antd";
 
 interface ProviderFormInitialValues {
   abn?: string;
@@ -41,13 +41,8 @@ export function ProviderForm({
     fieldErrors?.[field] ? { validateStatus: "error" as const, help: fieldErrors[field][0] } : {};
 
   return (
-    <Form
-      form={form}
-      layout="vertical"
-      onFinish={onSubmit}
-      initialValues={initialValues}
-      className="max-w-xl"
-    >
+    <Card className="max-w-xl">
+      <Form form={form} layout="vertical" onFinish={onSubmit} initialValues={initialValues}>
       {errorMessage && <Alert type="error" title={errorMessage} showIcon className="mb-4" />}
 
       <Form.Item label="ABN" name="abn" rules={[{ required: true }]} {...fieldError("abn")}>
@@ -86,6 +81,7 @@ export function ProviderForm({
           </Button>
         </Space>
       </Form.Item>
-    </Form>
+      </Form>
+    </Card>
   );
 }

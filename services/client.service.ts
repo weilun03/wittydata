@@ -1,5 +1,6 @@
 import * as clientRepo from "@/repositories/client.repository";
 import { validateClient, type ClientInput, type ValidationErrors } from "@/modules/client/validation";
+import { recordAuditLog, type ActorContext } from "@/lib/audit";
 
 export class ClientValidationError extends Error {
   constructor(public details: ValidationErrors) {
@@ -66,19 +67,71 @@ export async function getClient(id: number) {
   return client;
 }
 
-export async function createClient(input: ClientInput) {
+export async function createClient(input: ClientInput, actor: ActorContext) {
   assertValid(input);
   await assertNdisNumberUnique(input.ndis_number as string);
-  return clientRepo.insertClient(toInsertableValues(input));
+
+  const values = toInsertableValues(input);
+  const client = await clientRepo.insertClient(values);
+
+  await recordAuditLog({
+    actor: { userId: actor.userId, roleId: actor.roleId },
+    permissionCode: actor.permissionCode,
+    action: "create",
+    entity: "client",
+    entityId: client.id,
+    after: values,
+  });
+
+  return client;
 }
 
-export async function updateClientById(id: number, input: ClientInput) {
+export async function updateClientById(id: number, input: ClientInput, actor: ActorContext) {
   assertValid(input);
   await assertNdisNumberUnique(input.ndis_number as string, id);
 
-  const updated = await clientRepo.updateClient(id, toInsertableValues(input));
+  const existing = await clientRepo.getClientById(id);
+  if (!existing) {
+    throw new ClientNotFoundError();
+  }
+  const before = toInsertableValues(existing);
+
+  const values = toInsertableValues(input);
+  const updated = await clientRepo.updateClient(id, values);
   if (!updated) {
     throw new ClientNotFoundError();
   }
+
+  await recordAuditLog({
+    actor: { userId: actor.userId, roleId: actor.roleId },
+    permissionCode: actor.permissionCode,
+    action: "update",
+    entity: "client",
+    entityId: id,
+    before,
+    after: values,
+  });
+
   return updated;
+}
+
+export async function deleteClientById(id: number, actor: ActorContext) {
+  const existing = await clientRepo.getClientById(id);
+  if (!existing) {
+    throw new ClientNotFoundError();
+  }
+
+  const deleted = await clientRepo.deleteClient(id);
+  if (!deleted) {
+    throw new ClientNotFoundError();
+  }
+
+  await recordAuditLog({
+    actor: { userId: actor.userId, roleId: actor.roleId },
+    permissionCode: actor.permissionCode,
+    action: "delete",
+    entity: "client",
+    entityId: id,
+    before: toInsertableValues(existing),
+  });
 }

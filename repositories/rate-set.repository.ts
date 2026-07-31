@@ -32,3 +32,13 @@ export async function updateRateSet(id: number, values: Updateable<RateSetTable>
     .returningAll()
     .executeTakeFirst();
 }
+
+export async function deleteRateSet(id: number) {
+  return db
+    .updateTable("rate_set")
+    .set({ deleted_at: sql`now()` })
+    .where("id", "=", id)
+    .where("deleted_at", "is", null)
+    .returningAll()
+    .executeTakeFirst();
+}

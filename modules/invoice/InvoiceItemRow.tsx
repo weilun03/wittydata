@@ -175,7 +175,10 @@ export function InvoiceItemRow({ value, onChange, onRemove, clientId }: InvoiceI
       </div>
 
       <div className="mt-3 flex items-center justify-between">
-        <Typography.Text type="secondary" className="text-xs">
+        <Typography.Text
+          type={ambiguous ? "warning" : rateSet ? "secondary" : value.start_date && value.end_date ? "danger" : "secondary"}
+          className="text-xs"
+        >
           {ambiguous
             ? "Multiple rate sets match this date range."
             : rateSet

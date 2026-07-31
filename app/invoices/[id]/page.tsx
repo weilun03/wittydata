@@ -1,31 +1,62 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
-import { Button, Descriptions, Spin, Table, Tag, message } from "antd";
+import { useEffect, useMemo, useState } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { Button, Descriptions, Spin, Table, Tag, message, Popconfirm, Space } from "antd";
 import dayjs from "dayjs";
 import { InvoiceForm } from "@/modules/invoice/InvoiceForm";
-import type { InvoiceItemValue } from "@/modules/invoice/InvoiceItemRow";
 import type { InvoiceRecord } from "@/modules/invoice/types";
 import { BackButton } from "@/components/BackButton";
+import { formatUtcDate } from "@/lib/dates";
+import { NoPermission } from "@/components/NoPermission";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { PERMISSIONS } from "@/lib/permissions";
 
 export default function InvoiceDetailPage() {
   const params = useParams<{ id: string }>();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { loading: permissionsLoading, hasPermission } = useCurrentUser();
+  const canRead = hasPermission(PERMISSIONS.INVOICES_READ);
+  const canUpdate = hasPermission(PERMISSIONS.INVOICES_UPDATE);
+  const canDelete = hasPermission(PERMISSIONS.INVOICES_DELETE);
   const [invoice, setInvoice] = useState<InvoiceRecord | null>(null);
   const [loading, setLoading] = useState(true);
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState(searchParams.get("edit") === "true");
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]> | undefined>();
 
   useEffect(() => {
+    if (permissionsLoading || !canRead) return;
+
     fetch(`/api/invoices/${params.id}`)
       .then((res) => res.json())
       .then((json) => {
         setInvoice(json.data ?? null);
         setLoading(false);
       });
-  }, [params.id]);
+  }, [params.id, permissionsLoading, canRead]);
+
+  const initialValues = useMemo(() => {
+    if (!invoice) return undefined;
+    return {
+      client_id: invoice.client_id ?? undefined,
+      provider_id: invoice.provider_id ?? undefined,
+      invoice_number: invoice.invoice_number ?? undefined,
+      invoice_date: invoice.invoice_date ? dayjs(invoice.invoice_date) : undefined,
+      expected_amount: invoice.expected_amount != null ? Number(invoice.expected_amount) : undefined,
+      items: invoice.items.map((item) => ({
+        key: `existing-${item.id}`,
+        category_id: item.category_id ?? undefined,
+        support_item_id: item.support_item_id ?? undefined,
+        start_date: formatUtcDate(item.start_date),
+        end_date: formatUtcDate(item.end_date),
+        unit: item.unit != null ? Number(item.unit) : undefined,
+        input_rate: item.input_rate != null ? Number(item.input_rate) : undefined,
+      })),
+    };
+  }, [invoice]);
 
   const handleSubmit = async (values: Record<string, unknown>, status: "drafted" | "completed") => {
     setSubmitting(true);
@@ -53,10 +84,26 @@ export default function InvoiceDetailPage() {
     }
   };
 
-  if (loading) {
+  if (permissionsLoading || (canRead && loading)) {
     return (
       <div className="p-8">
         <Spin />
+      </div>
+    );
+  }
+
+  if (!canRead) {
+    return (
+      <div className="p-8">
+        <NoPermission message="You do not have permission to view this invoice." />
+      </div>
+    );
+  }
+
+  if (editing && !canUpdate) {
+    return (
+      <div className="p-8">
+        <NoPermission message="You do not have permission to edit this invoice." />
       </div>
     );
   }
@@ -65,15 +112,20 @@ export default function InvoiceDetailPage() {
     return <div className="p-8">Invoice not found.</div>;
   }
 
-  const itemValues: InvoiceItemValue[] = invoice.items.map((item) => ({
-    key: `existing-${item.id}`,
-    category_id: item.category_id ?? undefined,
-    support_item_id: item.support_item_id ?? undefined,
-    start_date: item.start_date ? dayjs(item.start_date).format("YYYY-MM-DD") : undefined,
-    end_date: item.end_date ? dayjs(item.end_date).format("YYYY-MM-DD") : undefined,
-    unit: item.unit != null ? Number(item.unit) : undefined,
-    input_rate: item.input_rate != null ? Number(item.input_rate) : undefined,
-  }));
+  const handleDelete = async () => {
+    try {
+      const res = await fetch(`/api/invoices/${params.id}`, { method: "DELETE" });
+      const json = await res.json();
+      if (!res.ok) {
+        message.error(json.error?.message ?? "Failed to delete invoice.");
+        return;
+      }
+      message.success("Invoice deleted.");
+      router.push("/invoices");
+    } catch {
+      message.error("Failed to delete invoice.");
+    }
+  };
 
   return (
     <div className="p-8">
@@ -83,19 +135,26 @@ export default function InvoiceDetailPage() {
           {invoice.invoice_number ?? `Invoice #${invoice.id}`}{" "}
           <Tag color={invoice.status === "completed" ? "green" : "orange"}>{invoice.status}</Tag>
         </h1>
-        {!editing && <Button onClick={() => setEditing(true)}>Edit</Button>}
+        {!editing && (
+          <Space>
+            {canUpdate && <Button onClick={() => setEditing(true)}>Edit</Button>}
+            {canDelete && (
+              <Popconfirm
+                title="Delete this invoice?"
+                okText="Delete"
+                okButtonProps={{ danger: true }}
+                onConfirm={handleDelete}
+              >
+                <Button danger>Delete</Button>
+              </Popconfirm>
+            )}
+          </Space>
+        )}
       </div>
 
       {editing ? (
         <InvoiceForm
-          initialValues={{
-            client_id: invoice.client_id ?? undefined,
-            provider_id: invoice.provider_id ?? undefined,
-            invoice_number: invoice.invoice_number ?? undefined,
-            invoice_date: invoice.invoice_date ? dayjs(invoice.invoice_date) : undefined,
-            expected_amount: invoice.expected_amount != null ? Number(invoice.expected_amount) : undefined,
-            items: itemValues,
-          }}
+          initialValues={initialValues}
           submitting={submitting}
           errorMessage={errorMessage}
           fieldErrors={fieldErrors}
@@ -119,17 +178,21 @@ export default function InvoiceDetailPage() {
             className="mt-6"
             rowKey="id"
             dataSource={invoice.items}
-            pagination={false}
+            pagination={{
+              pageSize: 10,
+              showSizeChanger: true,
+              showTotal: (total) => `Total ${total} items`,
+            }}
             columns={[
               {
                 title: "Start Date",
                 dataIndex: "start_date",
-                render: (v: string | null) => (v ? dayjs(v).format("YYYY-MM-DD") : "-"),
+                render: (v: string | null) => formatUtcDate(v) ?? "-",
               },
               {
                 title: "End Date",
                 dataIndex: "end_date",
-                render: (v: string | null) => (v ? dayjs(v).format("YYYY-MM-DD") : "-"),
+                render: (v: string | null) => formatUtcDate(v) ?? "-",
               },
               {
                 title: "Unit",

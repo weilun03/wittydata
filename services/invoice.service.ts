@@ -15,6 +15,7 @@ import {
   type ValidationErrors,
 } from "@/modules/invoice/validation";
 import { toUtcEndOfDay, toUtcStartOfDay } from "@/modules/invoice/dates";
+import { recordAuditLog, type ActorContext } from "@/lib/audit";
 
 export class InvoiceValidationError extends Error {
   constructor(public details: ValidationErrors) {
@@ -45,6 +46,14 @@ function isDbError(err: unknown): err is { code: string } {
 
 function round2(value: BigNumber.Value): string {
   return new BigNumber(value).toFixed(2, BigNumber.ROUND_HALF_UP);
+}
+
+// invoice/invoice_item amount columns are numeric(24,4), so Postgres reads them
+// back padded to 4 decimal places (e.g. "157.6200") even though every write path
+// already rounds to 2dp before storage. Reformat on the way out so API responses
+// show the same precision that was actually stored/intended.
+function formatMoney(value: string | null): string | null {
+  return value == null ? null : round2(value);
 }
 
 interface ComputedItem {
@@ -155,11 +164,44 @@ async function computeItems(
   return { results, itemErrors };
 }
 
+// Audit payloads only cover the invoice's top-level fields, not the items array —
+// items are re-derived from the date range/rate set on every save, so a full diff
+// would mostly just be noise rather than meaningful change history.
+function toAuditFields(invoice: {
+  client_id: number | null;
+  provider_id: number | null;
+  invoice_number: string | null;
+  invoice_date: string | null;
+  amount: string | null;
+  expected_amount: string | null;
+  status: string;
+}) {
+  return {
+    client_id: invoice.client_id,
+    provider_id: invoice.provider_id,
+    invoice_number: invoice.invoice_number,
+    invoice_date: invoice.invoice_date,
+    amount: invoice.amount,
+    expected_amount: invoice.expected_amount,
+    status: invoice.status,
+  };
+}
+
 async function assembleInvoice(id: number, trx: Kysely<Database>) {
   const invoice = await invoiceRepo.getInvoiceById(id, trx);
   if (!invoice) throw new InvoiceNotFoundError();
   const items = await invoiceRepo.getInvoiceItemsByInvoiceId(id, trx);
-  return { ...invoice, items };
+  return {
+    ...invoice,
+    amount: formatMoney(invoice.amount),
+    expected_amount: formatMoney(invoice.expected_amount),
+    items: items.map((item) => ({
+      ...item,
+      max_rate: formatMoney(item.max_rate),
+      input_rate: formatMoney(item.input_rate),
+      amount: formatMoney(item.amount),
+    })),
+  };
 }
 
 function toItemsArray(input: InvoiceInput): InvoiceItemInput[] {
@@ -227,9 +269,11 @@ export async function listInvoicesPaged(page: number, pageSize: number) {
       provider_name: r.provider_name,
       invoice_number: r.invoice_number,
       invoice_date: r.invoice_date,
-      amount: r.amount,
-      expected_amount: r.expected_amount,
+      amount: formatMoney(r.amount),
+      expected_amount: formatMoney(r.expected_amount),
       status: r.status,
+      created_at: r.created_at,
+      updated_at: r.updated_at,
     })),
     total,
   };
@@ -239,11 +283,11 @@ export async function getInvoice(id: number) {
   return assembleInvoice(id, db);
 }
 
-export async function createInvoice(input: InvoiceInput) {
+export async function createInvoice(input: InvoiceInput, actor: ActorContext) {
   const status = input.status === "completed" ? "completed" : "drafted";
   const items = toItemsArray(input);
 
-  return withUniqueViolationMapped(() =>
+  const invoice = await withUniqueViolationMapped(() =>
     db.transaction().execute(async (trx) => {
       const clientId = isPositiveIntegerInput(input.client_id) ? input.client_id : null;
       const providerId = isPositiveIntegerInput(input.provider_id) ? input.provider_id : null;
@@ -273,16 +317,29 @@ export async function createInvoice(input: InvoiceInput) {
       return assembleInvoice(invoiceRow.id, trx);
     }),
   );
+
+  await recordAuditLog({
+    actor: { userId: actor.userId, roleId: actor.roleId },
+    permissionCode: actor.permissionCode,
+    action: "create",
+    entity: "invoice",
+    entityId: invoice.id,
+    after: toAuditFields(invoice),
+  });
+
+  return invoice;
 }
 
-export async function updateInvoiceById(id: number, input: InvoiceInput) {
+export async function updateInvoiceById(id: number, input: InvoiceInput, actor: ActorContext) {
   const status = input.status === "completed" ? "completed" : "drafted";
   const items = toItemsArray(input);
+  let before: ReturnType<typeof toAuditFields> | null = null;
 
-  return withUniqueViolationMapped(() =>
+  const invoice = await withUniqueViolationMapped(() =>
     db.transaction().execute(async (trx) => {
       const existing = await invoiceRepo.getInvoiceById(id, trx);
       if (!existing) throw new InvoiceNotFoundError();
+      before = toAuditFields(existing);
 
       const clientId = isPositiveIntegerInput(input.client_id) ? input.client_id : null;
       const providerId = isPositiveIntegerInput(input.provider_id) ? input.provider_id : null;
@@ -314,5 +371,42 @@ export async function updateInvoiceById(id: number, input: InvoiceInput) {
       return assembleInvoice(id, trx);
     }),
   );
+
+  await recordAuditLog({
+    actor: { userId: actor.userId, roleId: actor.roleId },
+    permissionCode: actor.permissionCode,
+    action: "update",
+    entity: "invoice",
+    entityId: id,
+    before,
+    after: toAuditFields(invoice),
+  });
+
+  return invoice;
+}
+
+export async function deleteInvoiceById(id: number, actor: ActorContext) {
+  const existing = await db.transaction().execute(async (trx) => {
+    const invoice = await invoiceRepo.getInvoiceById(id, trx);
+    if (!invoice) throw new InvoiceNotFoundError();
+
+    const deleted = await invoiceRepo.deleteInvoice(trx, id);
+    if (!deleted) throw new InvoiceNotFoundError();
+
+    // Items have no independent existence once their invoice is gone — same cascade
+    // used when items are replaced on update (softDeleteAllItemsForInvoice).
+    await invoiceRepo.softDeleteAllItemsForInvoice(trx, id);
+
+    return invoice;
+  });
+
+  await recordAuditLog({
+    actor: { userId: actor.userId, roleId: actor.roleId },
+    permissionCode: actor.permissionCode,
+    action: "delete",
+    entity: "invoice",
+    entityId: id,
+    before: toAuditFields(existing),
+  });
 }
 

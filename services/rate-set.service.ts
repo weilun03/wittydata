@@ -4,6 +4,7 @@ import {
   type RateSetInput,
   type ValidationErrors,
 } from "@/modules/rate-set/validation";
+import { recordAuditLog, type ActorContext } from "@/lib/audit";
 
 export class RateSetValidationError extends Error {
   constructor(public details: ValidationErrors) {
@@ -54,6 +55,18 @@ function toInsertableValues(input: RateSetInput) {
   };
 }
 
+// Existing rows already carry their stored time-of-day (T00:00:00/T23:59:59), unlike
+// `input` which is a plain YYYY-MM-DD the DB round-trip hasn't touched yet — don't run
+// it back through toInsertableValues, or the date-suffixing would double up.
+function toAuditFields(row: { name: string; description: string | null; start_date: Date; end_date: Date | null }) {
+  return {
+    name: row.name,
+    description: row.description,
+    start_date: row.start_date,
+    end_date: row.end_date,
+  };
+}
+
 async function runOrConflict<T>(fn: () => Promise<T>): Promise<T> {
   try {
     return await fn();
@@ -80,17 +93,69 @@ export async function getRateSet(id: number) {
   return rateSet;
 }
 
-export async function createRateSet(input: RateSetInput) {
+export async function createRateSet(input: RateSetInput, actor: ActorContext) {
   assertValid(input);
-  return runOrConflict(() => rateSetRepo.insertRateSet(toInsertableValues(input)));
+
+  const values = toInsertableValues(input);
+  const rateSet = await runOrConflict(() => rateSetRepo.insertRateSet(values));
+
+  await recordAuditLog({
+    actor: { userId: actor.userId, roleId: actor.roleId },
+    permissionCode: actor.permissionCode,
+    action: "create",
+    entity: "rate_set",
+    entityId: rateSet.id,
+    after: values,
+  });
+
+  return rateSet;
 }
 
-export async function updateRateSetById(id: number, input: RateSetInput) {
+export async function updateRateSetById(id: number, input: RateSetInput, actor: ActorContext) {
   assertValid(input);
 
-  const updated = await runOrConflict(() => rateSetRepo.updateRateSet(id, toInsertableValues(input)));
+  const existing = await rateSetRepo.getRateSetById(id);
+  if (!existing) {
+    throw new RateSetNotFoundError();
+  }
+  const before = toAuditFields(existing);
+
+  const values = toInsertableValues(input);
+  const updated = await runOrConflict(() => rateSetRepo.updateRateSet(id, values));
   if (!updated) {
     throw new RateSetNotFoundError();
   }
+
+  await recordAuditLog({
+    actor: { userId: actor.userId, roleId: actor.roleId },
+    permissionCode: actor.permissionCode,
+    action: "update",
+    entity: "rate_set",
+    entityId: id,
+    before,
+    after: values,
+  });
+
   return updated;
+}
+
+export async function deleteRateSetById(id: number, actor: ActorContext) {
+  const existing = await rateSetRepo.getRateSetById(id);
+  if (!existing) {
+    throw new RateSetNotFoundError();
+  }
+
+  const deleted = await rateSetRepo.deleteRateSet(id);
+  if (!deleted) {
+    throw new RateSetNotFoundError();
+  }
+
+  await recordAuditLog({
+    actor: { userId: actor.userId, roleId: actor.roleId },
+    permissionCode: actor.permissionCode,
+    action: "delete",
+    entity: "rate_set",
+    entityId: id,
+    before: toAuditFields(existing),
+  });
 }

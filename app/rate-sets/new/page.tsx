@@ -2,12 +2,17 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { message } from "antd";
+import { message, Spin } from "antd";
 import { RateSetForm } from "@/modules/rate-set/RateSetForm";
 import { BackButton } from "@/components/BackButton";
+import { NoPermission } from "@/components/NoPermission";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { PERMISSIONS } from "@/lib/permissions";
 
 export default function NewRateSetPage() {
   const router = useRouter();
+  const { loading: permissionsLoading, hasPermission } = useCurrentUser();
+  const canCreate = hasPermission(PERMISSIONS.RATE_SETS_CREATE);
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]> | undefined>();
@@ -36,6 +41,22 @@ export default function NewRateSetPage() {
       setSubmitting(false);
     }
   };
+
+  if (permissionsLoading) {
+    return (
+      <div className="p-8">
+        <Spin />
+      </div>
+    );
+  }
+
+  if (!canCreate) {
+    return (
+      <div className="p-8">
+        <NoPermission message="You do not have permission to add rate sets." />
+      </div>
+    );
+  }
 
   return (
     <div className="p-8">

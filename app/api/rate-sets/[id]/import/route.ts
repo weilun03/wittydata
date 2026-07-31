@@ -1,5 +1,7 @@
 import type { NextRequest } from "next/server";
 import { apiSuccess, apiError } from "@/lib/api-response";
+import { requirePermission, rbacApiError } from "@/lib/rbac";
+import { PERMISSIONS } from "@/lib/permissions";
 import {
   importRateSetExcel,
   RateSetImportNotFoundError,
@@ -28,10 +30,17 @@ export async function POST(
   }
 
   try {
+    const current = await requirePermission(PERMISSIONS.RATE_SETS_IMPORT);
     const buffer = Buffer.from(await file.arrayBuffer());
-    const summary = await importRateSetExcel(id, buffer);
+    const summary = await importRateSetExcel(id, buffer, {
+      userId: current.user.id,
+      roleId: current.role.id,
+      permissionCode: PERMISSIONS.RATE_SETS_IMPORT,
+    });
     return apiSuccess(summary);
   } catch (err) {
+    const authErr = rbacApiError(err);
+    if (authErr) return authErr;
     if (err instanceof RateSetImportNotFoundError) {
       return apiError(404, "NOT_FOUND", err.message);
     }

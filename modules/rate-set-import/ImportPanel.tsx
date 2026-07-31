@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Alert, Button, Descriptions, Upload, message, Typography } from "antd";
+import { Alert, Button, Card, Descriptions, Upload, message, Typography } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import type { UploadFile } from "antd/es/upload/interface";
 import type { RateSetImportSummary } from "@/modules/rate-set-import/types";
@@ -48,7 +48,7 @@ export function ImportPanel({ rateSetId }: ImportPanelProps) {
   };
 
   return (
-    <div className="max-w-2xl">
+    <Card className="max-w-2xl">
       <Typography.Title level={4}>Import NDIS Excel Pricing File</Typography.Title>
 
       {errorMessage && <Alert type="error" title={errorMessage} showIcon className="mb-4" />}
@@ -102,7 +102,7 @@ export function ImportPanel({ rateSetId }: ImportPanelProps) {
               className="mt-4"
               type="warning"
               showIcon
-              message={`${summary.warnings.length} warning(s)`}
+              title={`${summary.warnings.length} warning(s)`}
               description={
                 <ul className="list-disc pl-4">
                   {summary.warnings.slice(0, 20).map((w, i) => (
@@ -114,6 +114,6 @@ export function ImportPanel({ rateSetId }: ImportPanelProps) {
           )}
         </div>
       )}
-    </div>
+    </Card>
   );
 }

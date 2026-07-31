@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { Form, Input, DatePicker, Button, Alert, Space } from "antd";
+import { Form, Input, DatePicker, Button, Alert, Space, Card } from "antd";
 import type { Dayjs } from "dayjs";
 
 interface RateSetFormInitialValues {
@@ -50,13 +50,8 @@ export function RateSetForm({
   };
 
   return (
-    <Form
-      form={form}
-      layout="vertical"
-      onFinish={handleFinish}
-      initialValues={initialValues}
-      className="max-w-xl"
-    >
+    <Card className="max-w-xl">
+      <Form form={form} layout="vertical" onFinish={handleFinish} initialValues={initialValues}>
       {errorMessage && <Alert type="error" title={errorMessage} showIcon className="mb-4" />}
 
       <Form.Item label="Name" name="name" rules={[{ required: true }]} {...fieldError("name")}>
@@ -92,6 +87,7 @@ export function RateSetForm({
           </Button>
         </Space>
       </Form.Item>
-    </Form>
+      </Form>
+    </Card>
   );
 }

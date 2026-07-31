@@ -38,6 +38,8 @@ export interface InvoiceListRow {
   amount: string | null;
   expected_amount: string | null;
   status: "drafted" | "completed";
+  created_at: string;
+  updated_at: string;
 }
 
 export interface RateSetCategoryOption {

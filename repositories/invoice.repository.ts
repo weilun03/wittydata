@@ -22,6 +22,8 @@ export async function listInvoices({ limit, offset }: { limit: number; offset: n
         "invoice.amount",
         "invoice.expected_amount",
         "invoice.status",
+        "invoice.created_at",
+        "invoice.updated_at",
         "client.first_name as client_first_name",
         "client.last_name as client_last_name",
         "provider.name as provider_name",
@@ -65,6 +67,16 @@ export async function updateInvoice(
   return trx
     .updateTable("invoice")
     .set({ ...values, updated_at: sql`now()` })
+    .where("id", "=", id)
+    .where("deleted_at", "is", null)
+    .returningAll()
+    .executeTakeFirst();
+}
+
+export async function deleteInvoice(trx: DbOrTrx, id: number) {
+  return trx
+    .updateTable("invoice")
+    .set({ deleted_at: sql`now()` })
     .where("id", "=", id)
     .where("deleted_at", "is", null)
     .returningAll()

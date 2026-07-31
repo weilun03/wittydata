@@ -4,6 +4,7 @@ import {
   type ProviderInput,
   type ValidationErrors,
 } from "@/modules/provider/validation";
+import { recordAuditLog, type ActorContext } from "@/lib/audit";
 
 export class ProviderValidationError extends Error {
   constructor(public details: ValidationErrors) {
@@ -50,17 +51,69 @@ export async function getProvider(id: number) {
   return provider;
 }
 
-export async function createProvider(input: ProviderInput) {
+export async function createProvider(input: ProviderInput, actor: ActorContext) {
   assertValid(input);
-  return providerRepo.insertProvider(toInsertableValues(input));
+
+  const values = toInsertableValues(input);
+  const provider = await providerRepo.insertProvider(values);
+
+  await recordAuditLog({
+    actor: { userId: actor.userId, roleId: actor.roleId },
+    permissionCode: actor.permissionCode,
+    action: "create",
+    entity: "provider",
+    entityId: provider.id,
+    after: values,
+  });
+
+  return provider;
 }
 
-export async function updateProviderById(id: number, input: ProviderInput) {
+export async function updateProviderById(id: number, input: ProviderInput, actor: ActorContext) {
   assertValid(input);
 
-  const updated = await providerRepo.updateProvider(id, toInsertableValues(input));
+  const existing = await providerRepo.getProviderById(id);
+  if (!existing) {
+    throw new ProviderNotFoundError();
+  }
+  const before = toInsertableValues(existing);
+
+  const values = toInsertableValues(input);
+  const updated = await providerRepo.updateProvider(id, values);
   if (!updated) {
     throw new ProviderNotFoundError();
   }
+
+  await recordAuditLog({
+    actor: { userId: actor.userId, roleId: actor.roleId },
+    permissionCode: actor.permissionCode,
+    action: "update",
+    entity: "provider",
+    entityId: id,
+    before,
+    after: values,
+  });
+
   return updated;
+}
+
+export async function deleteProviderById(id: number, actor: ActorContext) {
+  const existing = await providerRepo.getProviderById(id);
+  if (!existing) {
+    throw new ProviderNotFoundError();
+  }
+
+  const deleted = await providerRepo.deleteProvider(id);
+  if (!deleted) {
+    throw new ProviderNotFoundError();
+  }
+
+  await recordAuditLog({
+    actor: { userId: actor.userId, roleId: actor.roleId },
+    permissionCode: actor.permissionCode,
+    action: "delete",
+    entity: "provider",
+    entityId: id,
+    before: toInsertableValues(existing),
+  });
 }

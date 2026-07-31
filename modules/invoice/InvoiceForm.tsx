@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Alert, Button, DatePicker, Form, Input, InputNumber, Select, Space, Typography } from "antd";
+import { Alert, Button, Card, DatePicker, Form, Input, InputNumber, Select, Space, Typography } from "antd";
 import type { Dayjs } from "dayjs";
 import { InvoiceItemsEditor } from "@/modules/invoice/InvoiceItemsEditor";
 import type { InvoiceItemValue } from "@/modules/invoice/InvoiceItemRow";
@@ -87,24 +87,33 @@ export function InvoiceForm({
   };
 
   const handleSaveDraft = async () => {
-    await form.validateFields(["invoice_number", "invoice_date", "expected_amount"]);
+    try {
+      await form.validateFields(["invoice_number", "invoice_date", "expected_amount"]);
+    } catch {
+      return;
+    }
     onSubmit(buildPayload("drafted"), "drafted");
   };
 
   const handleComplete = async () => {
-    await form.validateFields(["invoice_number", "invoice_date", "expected_amount"]);
+    try {
+      await form.validateFields(["invoice_number", "invoice_date", "expected_amount"]);
+    } catch {
+      return;
+    }
     onSubmit(buildPayload("completed"), "completed");
   };
 
   return (
-    <Form form={form} layout="vertical" initialValues={initialValues} className="max-w-3xl">
+    <Card>
+      <Form form={form} layout="vertical" initialValues={initialValues}>
       {errorMessage && <Alert type="error" title={errorMessage} showIcon className="mb-4" />}
       {fieldErrors?.items && (
         <Alert
           type="error"
           showIcon
           className="mb-4"
-          message="Invoice item errors"
+          title="Invoice item errors"
           description={
             <ul className="list-disc pl-4">
               {fieldErrors.items.map((m, i) => (
@@ -115,7 +124,7 @@ export function InvoiceForm({
         />
       )}
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Form.Item label="Participant" name="client_id" {...fieldError("client_id")}>
           <Select
             allowClear
@@ -138,7 +147,7 @@ export function InvoiceForm({
         </Form.Item>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Form.Item
           label="Invoice Number"
           name="invoice_number"
@@ -183,6 +192,7 @@ export function InvoiceForm({
           </Button>
         </Space>
       </Form.Item>
-    </Form>
+      </Form>
+    </Card>
   );
 }

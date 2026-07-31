@@ -2,13 +2,18 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { message } from "antd";
+import { message, Spin } from "antd";
 import { ClientForm } from "@/modules/client/ClientForm";
 import type { Gender, PricingRegion } from "@/modules/client/types";
 import { BackButton } from "@/components/BackButton";
+import { NoPermission } from "@/components/NoPermission";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { PERMISSIONS } from "@/lib/permissions";
 
 export default function NewClientPage() {
   const router = useRouter();
+  const { loading: permissionsLoading, hasPermission } = useCurrentUser();
+  const canCreate = hasPermission(PERMISSIONS.CLIENTS_CREATE);
   const [genders, setGenders] = useState<Gender[]>([]);
   const [pricingRegions, setPricingRegions] = useState<PricingRegion[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -49,6 +54,22 @@ export default function NewClientPage() {
       setSubmitting(false);
     }
   };
+
+  if (permissionsLoading) {
+    return (
+      <div className="p-8">
+        <Spin />
+      </div>
+    );
+  }
+
+  if (!canCreate) {
+    return (
+      <div className="p-8">
+        <NoPermission message="You do not have permission to add participants." />
+      </div>
+    );
+  }
 
   return (
     <div className="p-8">

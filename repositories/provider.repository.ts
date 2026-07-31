@@ -4,6 +4,18 @@ import type { ProviderTable } from "@/db/types";
 
 const activeProviders = () => db.selectFrom("provider").where("deleted_at", "is", null);
 
+export async function findActiveProvidersByAbn(abn: string) {
+  return activeProviders().selectAll().where("abn", "=", abn).execute();
+}
+
+export async function searchActiveProvidersByNameTokens(tokens: string[]) {
+  if (tokens.length === 0) return [];
+  return activeProviders()
+    .selectAll()
+    .where(sql<boolean>`name_parts && ${tokens}::text[]`)
+    .execute();
+}
+
 export async function listProviders({ limit, offset }: { limit: number; offset: number }) {
   const [rows, totalRow] = await Promise.all([
     activeProviders().selectAll().orderBy("id", "desc").limit(limit).offset(offset).execute(),
@@ -27,6 +39,16 @@ export async function updateProvider(id: number, values: Updateable<ProviderTabl
   return db
     .updateTable("provider")
     .set({ ...values, updated_at: sql`now()` })
+    .where("id", "=", id)
+    .where("deleted_at", "is", null)
+    .returningAll()
+    .executeTakeFirst();
+}
+
+export async function deleteProvider(id: number) {
+  return db
+    .updateTable("provider")
+    .set({ deleted_at: sql`now()` })
     .where("id", "=", id)
     .where("deleted_at", "is", null)
     .returningAll()
