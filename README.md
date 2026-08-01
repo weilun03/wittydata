@@ -98,22 +98,40 @@ after step 3, with:
 docker compose exec -T postgres psql -U witty -d ndis_invoicing < db/demo/demo_seed.sql
 ```
 
+Windows: this works as-is on PowerShell 7+ (`pwsh`). On the older, default Windows PowerShell
+5.1 (`<` redirection isn't supported there), wrap it through `cmd` instead:
+
+```powershell
+cmd /c "docker compose exec -T postgres psql -U witty -d ndis_invoicing < db/demo/demo_seed.sql"
+```
+
 Run this only against a fresh database, before creating your own clients/providers/invoices/rate
 sets — it uses fixed ids preserved from the original export, so running it after you've already
 created your own records can hit id conflicts.
 
 This loads the database rows only. The upload-history entry's original PDF isn't restored by
-this command (Postgres can't write into MinIO) — its list entry, status, and AI extraction
-result all display correctly regardless, but clicking to view/download the original PDF will
-fail unless you also load the file into MinIO:
+this command (Postgres can't write into MinIO), and the `invoice-uploads` bucket itself doesn't
+exist yet either — it's normally created lazily by the app on first upload
+([lib/s3.ts:13](lib/s3.ts#L13)), which hasn't happened on a fresh install. The list entry,
+status, and AI extraction result all display correctly regardless; only viewing/downloading the
+original PDF needs this extra step, which also creates the bucket:
+
+macOS/Linux (bash/zsh):
 
 ```bash
 docker run --rm --network container:$(docker compose ps -q minio) \
   -v "$(pwd)/db/demo/files":/import --entrypoint /bin/sh minio/mc -c "
     mc alias set local http://localhost:9000 witty wittysecret &&
+    mc mb --ignore-existing local/invoice-uploads &&
     mc cp /import/01_Invoice_Sample.pdf \
       'local/invoice-uploads/invoices/4ea9fc42-6260-4772-af41-72842cfdbedc/22388c9d-a67a-4027-a621-82f1be22e417-01_Invoice_Sample.pdf'
   "
+```
+
+Windows (PowerShell):
+
+```powershell
+docker run --rm --network container:$(docker compose ps -q minio) -v "${PWD}/db/demo/files:/import" --entrypoint /bin/sh minio/mc -c "mc alias set local http://localhost:9000 witty wittysecret && mc mb --ignore-existing local/invoice-uploads && mc cp /import/01_Invoice_Sample.pdf 'local/invoice-uploads/invoices/4ea9fc42-6260-4772-af41-72842cfdbedc/22388c9d-a67a-4027-a621-82f1be22e417-01_Invoice_Sample.pdf'"
 ```
 
 **Not included:** `auth_session` (login/session history) is intentionally left out. Sessions
