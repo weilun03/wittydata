@@ -73,6 +73,9 @@ On first initialization, the Postgres container automatically executes every SQL
 - `02_seed.sql` — RBAC roles/permissions and a default super admin user
 - `03_lookup_seed.sql` — static lookup data (genders, pricing regions, etc.)
 
+This gives you a fully working but empty system — no clients, providers, invoices, or rate
+sets yet, just the schema and the default login.
+
 If you modify any SQL files in `db/init/` after the database volume has already been initialized,
 those changes will not be applied automatically. Recreate the volume to re-run the initialization:
 
@@ -83,6 +86,21 @@ docker compose up -d
 
 MinIO console is available at http://localhost:9001 (user/pass: `witty` / `wittysecret`).
 
+#### Optional: load demo data
+
+`db/demo/demo_seed.sql` is **not** run automatically — it's a separate, opt-in script with
+sample clients/providers/invoices, a full imported NDIS rate-set catalogue, and 2 extra demo
+logins (narrower RBAC roles), so you can see the app populated instead of empty. Load it once,
+right after step 3, with:
+
+```bash
+docker compose exec -T postgres psql -U witty -d ndis_invoicing < db/demo/demo_seed.sql
+```
+
+Run this only against a fresh database, before creating your own clients/providers/invoices/rate
+sets — it uses fixed ids preserved from the original export, so running it after you've already
+created your own records can hit id conflicts.
+
 ### 4. Run the app
 
 ```bash
@@ -91,8 +109,11 @@ npm run dev
 
 Open http://localhost:3000 — you'll be redirected to `/login`.
 
-**Seeded login (fresh database only):** `test@wittydata.com` / `Test1234` (Super Admin, matches the reference system's
-credentials).
+**Seeded login (fresh database only):** `superadmin@wittydata.com` / `superadmin1234` (Super Admin).
+
+If you loaded the optional demo data (see above), two extra accounts with narrower roles are
+also available for testing RBAC: `1admin@wittydata.com` (Billing Officer) and
+`testadmin@wittydata.com` (Read-only). Their passwords aren't documented here.
 
 ## Feature coverage
 
@@ -117,7 +138,9 @@ matching with ranked tie-breaking), invoice draft creation with partial-data tol
 - `repositories/` — Kysely query layer, one per aggregate root
 - `lib/` — cross-cutting concerns (db client, session/auth, RBAC checks, MinIO client, AI client,
   audit helper, response envelope)
-- `db/init/` — schema + seed SQL, mounted directly into the Postgres container
+- `db/init/` — schema + base seed SQL, mounted directly into the Postgres container (runs
+  automatically on first start)
+- `db/demo/` — optional demo data seed, loaded manually (not mounted into the container)
 
 Route handlers stay thin: parse input → call a service → return the standard
 `{ data }` / `{ error: { code, message, details } }` envelope. All validation, rate/price matching,

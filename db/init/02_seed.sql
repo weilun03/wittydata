@@ -105,23 +105,23 @@ on conflict do nothing;
 
 insert into app_user (email, full_name, is_default)
 select
-    'test@wittydata.com',
-    'Default Super Admin',
+    'superadmin@wittydata.com',
+    'Super Admin',
     true
 where not exists (
     select 1
     from app_user
-    where email = 'test@wittydata.com'
+    where email = 'superadmin@wittydata.com'
       and deleted_at is null
 );
 
 insert into auth_password (user_id, password_hash, password_updated_at)
 select
     u.id,
-    '$argon2id$v=19$m=65536,t=3,p=4$jcDkDE4DafhA58KdfmR/eA$X60K8MUvvruzSzy1FpJ8zILKslQMS3VI8m037hg3xWo',
+    '$argon2id$v=19$m=65536,t=3,p=4$93zb0KyYYYYOkN+Fijdvmg$SLefhByzVk8dXBK5iLE/putiwppWaiLOexzULOHayi4',
     now()
 from app_user u
-where u.email = 'test@wittydata.com'
+where u.email = 'superadmin@wittydata.com'
   and u.deleted_at is null
   and not exists (
       select 1
@@ -135,7 +135,7 @@ select
     r.id
 from app_user u
 cross join rbac_role r
-where u.email = 'test@wittydata.com'
+where u.email = 'superadmin@wittydata.com'
   and u.deleted_at is null
   and r.code = 'SUPER_ADMIN'
 on conflict (user_id, role_id) do nothing;
